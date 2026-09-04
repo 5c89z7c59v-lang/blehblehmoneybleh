@@ -6,6 +6,7 @@
   var ITERATIONS = 300000;
 
   var LANG_NAMES = { de: "German", fr: "French", lb: "Luxembourgish" };
+  var ACTIVITIES = ["Vocabulary Practice", "Watched a Film/Show", "Listened to a Podcast", "Grammar Review", "Conversation Practice", "Reading", "Other"];
 
   function seedVocab(items) {
     return items.map(function (it, i) {
@@ -14,6 +15,9 @@
   }
   function seedGrammar(items) {
     return items.map(function (it, i) { return { id: "g" + i, title: it[0], body: it[1], topic: it[2] }; });
+  }
+  function seedMedia(items) {
+    return items.map(function (it, i) { return { id: "m" + i, title: it[0], type: it[1], level: it[2], note: it[3] }; });
   }
 
   var DE_VOCAB = seedVocab([
@@ -52,6 +56,19 @@
     ["Two-way prepositions in idiomatic use", "an, auf, in etc. don't always follow the literal motion/location rule in fixed expressions: sich auf etwas freuen (Akk.), Angst vor etwas haben (Dat.) — worth memorizing per verb.", "Mood & Nuance"]
   ]);
 
+  var DE_MEDIA = seedMedia([
+    ["Das Leben der Anderen", "Film", "C1", "Stasi-era drama, deliberate and clear standard German — a modern classic."],
+    ["Good Bye, Lenin!", "Film", "B2", "Warm, accessible comedy-drama; great everyday vocabulary."],
+    ["Toni Erdmann", "Film", "C1", "Dense, naturalistic dialogue — closer to how people actually talk."],
+    ["Dark", "Show", "C1", "Netflix sci-fi mystery; fast, layered dialogue, worth subtitles at first."],
+    ["Babylon Berlin", "Show", "C1", "1920s period drama, rich vocabulary, slower narrative pace helps."],
+    ["How to Sell Drugs Online (Fast)", "Show", "B2", "Youth slang and everyday speech, shorter punchy sentences."],
+    ["Slow German mit Annik Rubens", "Podcast", "B1-B2", "Exactly what it says — deliberately slow, clear narration."],
+    ["Langsam gesprochene Nachrichten (DW)", "Podcast", "B1-B2", "Deutsche Welle's slowly-read news bulletin, updated daily."],
+    ["Easy German", "Podcast", "B2", "Street interviews with natural speech; transcripts available."],
+    ["Zeit Verbrechen", "Podcast", "C1", "True-crime journalism podcast — full native speed, for confident learners."]
+  ]);
+
   var FR_VOCAB = seedVocab([
     ["le défi", "the challenge", "Le changement climatique est un défi mondial.", "Climate change is a global challenge.", "Opinion & Debate"],
     ["le préjugé", "the prejudice", "Il faut toujours remettre en question ses préjugés.", "One should always question one's prejudices.", "Opinion & Debate"],
@@ -88,6 +105,19 @@
     ["Relative pronouns 'dont' and 'lequel'", "'dont' replaces de + noun: „le livre dont je parle“. 'lequel/laquelle' follows other prepositions: „la raison pour laquelle je suis venu“.", "Structure"]
   ]);
 
+  var FR_MEDIA = seedMedia([
+    ["Intouchables", "Film", "B2", "Warm, funny, and widely loved — clear enunciation throughout."],
+    ["La Haine", "Film", "C1", "Street French, argot-heavy — challenging but iconic."],
+    ["Amélie", "Film", "B2", "Whimsical narration, clearly spoken — a gentle classic."],
+    ["Dix Pour Cent (Call My Agent!)", "Show", "C1", "Witty, fast industry dialogue about a Parisian talent agency."],
+    ["Lupin", "Show", "B2-C1", "Netflix thriller, clean modern French, broad appeal."],
+    ["Plan Cœur (The Hook Up Plan)", "Show", "B2", "Contemporary youth French, everyday conversational register."],
+    ["InnerFrench", "Podcast", "B2-C1", "Made for learners but at a near-natural pace, thoughtful topics."],
+    ["Journal en français facile (RFI)", "Podcast", "B1-B2", "Daily news read in simplified, clear French."],
+    ["News in Slow French", "Podcast", "B1-B2", "Deliberately paced current-affairs discussion."],
+    ["Coffee Break French", "Podcast", "A2-B2", "Structured lessons — useful for reinforcing grammar systematically."]
+  ]);
+
   var LB_VOCAB = seedVocab([
     ["d'Erausfuerderung", "the challenge", "De Klimawandel ass eng global Erausfuerderung.", "Climate change is a global challenge.", "Formal & Debate"],
     ["de Virdeel", "the advantage", "Dat huet vill Virdeeler.", "That has many advantages.", "Formal & Debate"],
@@ -112,12 +142,19 @@
     ["hunn vs. sinn as the perfect-tense auxiliary", "A similar split to German haben/sein: motion and change-of-state verbs typically take sinn (Ech sinn gaang), most others take hunn (Ech hu geschafft).", "Structure"]
   ]);
 
+  var LB_MEDIA = seedMedia([
+    ["Eng nei Zäit", "Film", "C1", "Luxembourg's 2018 Oscar submission — post-WWII drama, spoken Luxembourgish."],
+    ["Superjhemp retourne", "Film", "B2-C1", "Comic-book comedy in Luxembourgish — lighter, more colloquial speech."],
+    ["100,7", "Podcast", "All levels", "Luxembourgish public radio — live and on-demand, the most reliable everyday-listening source."],
+    ["RTL Lëtzebuerg (radio & TV)", "Show", "All levels", "News and talk in Luxembourgish; good for ear-training on real broadcast speech."]
+  ]);
+
   var DEFAULT_STATE = {
     currentLang: "de",
     languages: {
-      de: { vocab: DE_VOCAB, grammar: DE_GRAMMAR },
-      fr: { vocab: FR_VOCAB, grammar: FR_GRAMMAR },
-      lb: { vocab: LB_VOCAB, grammar: LB_GRAMMAR }
+      de: { vocab: DE_VOCAB, grammar: DE_GRAMMAR, media: DE_MEDIA, log: [] },
+      fr: { vocab: FR_VOCAB, grammar: FR_GRAMMAR, media: FR_MEDIA, log: [] },
+      lb: { vocab: LB_VOCAB, grammar: LB_GRAMMAR, media: LB_MEDIA, log: [] }
     },
     streak: { lastDate: null, count: 0 }
   };
@@ -129,12 +166,17 @@
   var busy = false;
   var lockError = "";
   var savedFlash = false;
-  var mode = "practice"; // practice | browse | grammar
+  var mode = "practice"; // practice | browse | grammar | media | log
   var practiceQueue = [];
   var practiceIndex = 0;
   var revealed = false;
   var includeKnown = false;
   var browseTopic = null;
+  var mediaTypeFilter = null;
+  var currentPracticeType = null;
+  var choicePicked = null;
+  var sessionStartTime = null;
+  var sessionLogged = false;
 
   // ---------- crypto helpers ----------
   function b64encode(buf) { var bytes = new Uint8Array(buf); var bin = ""; for (var i = 0; i < bytes.length; i++) bin += String.fromCharCode(bytes[i]); return btoa(bin); }
@@ -158,10 +200,12 @@
   function pad(n) { return String(n).padStart(2, "0"); }
   function isoFromDate(d) { return d.getFullYear() + "-" + pad(d.getMonth() + 1) + "-" + pad(d.getDate()); }
   function todayISO() { return isoFromDate(new Date()); }
+  function dayLabel(iso) { var d = new Date(iso + "T00:00:00"); return d.toLocaleDateString(undefined, { weekday: "short", day: "numeric", month: "short" }); }
   function uid(prefix) { return (prefix || "v") + Math.random().toString(36).slice(2, 9) + Date.now().toString(36).slice(-4); }
   function escapeHTML(s) { return String(s).replace(/[&<>"']/g, function (c) { return { "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;" }[c]; }); }
   function shuffle(arr) { var a = arr.slice(); for (var i = a.length - 1; i > 0; i--) { var j = Math.floor(Math.random() * (i + 1)); var t = a[i]; a[i] = a[j]; a[j] = t; } return a; }
   function daysBetween(a, b) { return Math.round((new Date(b + "T00:00:00") - new Date(a + "T00:00:00")) / 86400000); }
+  function round(n) { return Math.round(n); }
 
   function markPracticeDay() {
     var today = todayISO();
@@ -169,6 +213,15 @@
     if (s.lastDate === today) return;
     if (s.lastDate) { var diff = daysBetween(s.lastDate, today); s.count = diff === 1 ? s.count + 1 : 1; } else { s.count = 1; }
     s.lastDate = today;
+  }
+
+  function ensureShape(s) {
+    Object.keys(LANG_NAMES).forEach(function (code) {
+      if (!s.languages[code]) s.languages[code] = { vocab: [], grammar: [], media: [], log: [] };
+      if (!s.languages[code].media) s.languages[code].media = [];
+      if (!s.languages[code].log) s.languages[code].log = [];
+    });
+    if (!s.streak) s.streak = { lastDate: null, count: 0 };
   }
 
   // ---------- storage ----------
@@ -246,6 +299,7 @@
     deriveKey(pass, saltBytes).then(function (key) {
       return decryptJSON(envelope.iv, envelope.ct, key).then(function (plain) {
         cryptoKey = key; state = plain; locked = false; busy = false;
+        ensureShape(state);
         if (remember) { try { localStorage.setItem(STORAGE_KEY, pass); } catch (e) {} }
         buildQueue();
         render();
@@ -262,10 +316,44 @@
 
   // ---------- practice logic ----------
   function currentLang() { return state.languages[state.currentLang]; }
+
+  function coreTerm(term) {
+    var t = term.split(" … ")[0].split("…")[0];
+    t = t.replace(/^(der|die|das|den|dem|des|le|la|les|l'|de|d'|dat|een|eng)\s+/i, "");
+    return t.trim();
+  }
+  function buildCloze(card) {
+    var core = coreTerm(card.term);
+    if (!core || !card.example) return null;
+    var idx = card.example.toLowerCase().indexOf(core.toLowerCase());
+    if (idx === -1) return null;
+    return {
+      before: card.example.slice(0, idx),
+      blank: card.example.slice(idx, idx + core.length),
+      after: card.example.slice(idx + core.length)
+    };
+  }
+  function pickTypeForCard(card) {
+    var candidates = ["recall", "recall", "reverse", "choice"];
+    if (buildCloze(card)) candidates.push("cloze");
+    return candidates[Math.floor(Math.random() * candidates.length)];
+  }
+  function buildChoices(card) {
+    var pool = currentLang().vocab.filter(function (v) { return v.id !== card.id && v.translation !== card.translation; });
+    var distractors = shuffle(pool).slice(0, 3).map(function (v) { return v.translation; });
+    return shuffle(distractors.concat([card.translation]));
+  }
+  function setCurrentType() {
+    var card = currentCard();
+    currentPracticeType = card ? pickTypeForCard(card) : null;
+    choicePicked = null;
+  }
   function buildQueue() {
     var pool = currentLang().vocab.filter(function (v) { return includeKnown || v.status !== "known"; });
     practiceQueue = shuffle(pool).map(function (v) { return v.id; });
     practiceIndex = 0; revealed = false;
+    sessionStartTime = Date.now(); sessionLogged = false;
+    setCurrentType();
   }
   function currentCard() {
     if (practiceIndex >= practiceQueue.length) return null;
@@ -280,6 +368,25 @@
       neu: v.filter(function (x) { return x.status === "new"; }).length,
       total: v.length
     };
+  }
+  function autoLogSessionIfDone() {
+    if (sessionLogged || !practiceQueue.length || practiceIndex < practiceQueue.length) return;
+    sessionLogged = true;
+    var minutes = Math.max(1, round((Date.now() - sessionStartTime) / 60000));
+    currentLang().log.push({ id: uid("l"), date: todayISO(), activity: "Vocabulary Practice", minutes: minutes, note: practiceQueue.length + " card" + (practiceQueue.length === 1 ? "" : "s") + " reviewed" });
+  }
+
+  // ---------- log stats ----------
+  function last7DaysMinutes(lang) {
+    var out = [];
+    for (var i = 6; i >= 0; i--) {
+      var d = new Date(); d.setDate(d.getDate() - i);
+      var iso = isoFromDate(d);
+      var label = d.toLocaleDateString(undefined, { weekday: "short" });
+      var minutes = lang.log.filter(function (l) { return l.date === iso; }).reduce(function (s, l) { return s + (l.minutes || 0); }, 0);
+      out.push({ label: label, minutes: minutes });
+    }
+    return out;
   }
 
   // ---------- render pieces ----------
@@ -302,7 +409,7 @@
   }
 
   function renderModeTabs() {
-    var modes = [["practice", "Practice"], ["browse", "Browse"], ["grammar", "Grammar"]];
+    var modes = [["practice", "Practice"], ["browse", "Browse"], ["grammar", "Grammar"], ["media", "Watch & Listen"], ["log", "Log"]];
     return '<div class="mode-tabs">' + modes.map(function (m) {
       return '<button type="button" class="mode-tab ' + (mode === m[0] ? "active" : "") + '" data-action="set-mode" data-mode="' + m[0] + '">' + m[1] + "</button>";
     }).join("") + "</div>";
@@ -311,34 +418,59 @@
   function renderPractice() {
     var card = currentCard();
     if (!card) {
+      autoLogSessionIfDone();
       return (
         '<div class="panel"><div class="practice-card">' +
         '<p class="eyebrow">Session Complete</p>' +
         '<h2 style="margin-top:10px;">You’ve been through everything due for review.</h2>' +
-        '<p class="field-hint" style="color:var(--muted); margin-top:10px;">Come back tomorrow, or review words you already know for extra practice.</p>' +
+        '<p class="field-hint" style="color:var(--muted); margin-top:10px;">Logged to your practice history. Come back tomorrow, or review words you already know for extra practice.</p>' +
         '<div class="practice-actions">' +
           '<button type="button" class="ghost" data-action="practice-known">' + (includeKnown ? "Hide Known Words" : "Practice Known Words Too") + "</button>" +
           '<button type="button" class="primary" data-action="restart-queue">Restart Queue</button>' +
         "</div></div></div>"
       );
     }
-    var body = '<span class="status-badge ' + card.status + '">' + card.status + "</span>";
+
+    var promptHTML = "";
+    var answerHTML = "";
+    var badge = '<span class="status-badge ' + card.status + '">' + card.status + "</span>";
+
+    if (currentPracticeType === "reverse") {
+      promptHTML = '<p class="practice-topic eyebrow">' + escapeHTML(card.topic) + " · Translate into " + LANG_NAMES[state.currentLang] + '</p><p class="practice-term">' + escapeHTML(card.translation) + "</p>";
+      answerHTML = revealed ? '<p class="practice-translation">' + escapeHTML(card.term) + "</p><p class=\"practice-example\">" + escapeHTML(card.example) + '</p><p class="practice-example-tr">' + escapeHTML(card.exampleTranslation) + "</p>" : "";
+    } else if (currentPracticeType === "cloze") {
+      var cz = buildCloze(card);
+      promptHTML = '<p class="practice-topic eyebrow">' + escapeHTML(card.topic) + ' · Fill in the blank</p><p class="cloze-text">' + escapeHTML(cz.before) + '<span class="cloze-blank">_____</span>' + escapeHTML(cz.after) + "</p>";
+      answerHTML = revealed ? '<p class="practice-translation">' + escapeHTML(card.term) + "</p><p class=\"practice-example-tr\">" + escapeHTML(card.exampleTranslation) + "</p>" : "";
+    } else if (currentPracticeType === "choice") {
+      var options = buildChoices(card);
+      promptHTML = '<p class="practice-topic eyebrow">' + escapeHTML(card.topic) + " · Choose the translation</p><p class=\"practice-term\">" + escapeHTML(card.term) + "</p>";
+      if (!revealed) {
+        promptHTML += '<div class="choice-grid">' + options.map(function (opt) {
+          return '<button type="button" class="choice-option" data-action="choose-option" data-value="' + escapeHTML(opt) + '">' + escapeHTML(opt) + "</button>";
+        }).join("") + "</div>";
+      } else {
+        promptHTML += '<div class="choice-grid">' + options.map(function (opt) {
+          var cls = opt === card.translation ? "correct" : (opt === choicePicked ? "incorrect" : "");
+          return '<button type="button" class="choice-option ' + cls + '" disabled>' + escapeHTML(opt) + "</button>";
+        }).join("") + "</div>";
+        answerHTML = '<p class="practice-example" style="margin-top:20px;">' + escapeHTML(card.example) + "</p><p class=\"practice-example-tr\">" + escapeHTML(card.exampleTranslation) + "</p>";
+      }
+    } else {
+      promptHTML = '<p class="practice-topic eyebrow">' + escapeHTML(card.topic) + '</p><p class="practice-term">' + escapeHTML(card.term) + "</p>";
+      answerHTML = revealed ? '<p class="practice-translation">' + escapeHTML(card.translation) + "</p><p class=\"practice-example\">" + escapeHTML(card.example) + '</p><p class="practice-example-tr">' + escapeHTML(card.exampleTranslation) + "</p>" : "";
+    }
+
+    var showAnswerBtn = (currentPracticeType !== "choice" && !revealed)
+      ? '<div class="practice-actions"><button type="button" class="primary" data-action="reveal">Show Answer</button></div>' : "";
+    var gradeButtons = revealed
+      ? '<div class="practice-actions"><button type="button" class="negative-btn" data-action="mark-learning">Still Learning</button><button type="button" class="positive-btn" data-action="mark-known">Got It</button></div>'
+      : "";
+
     return (
       '<div class="panel"><div class="practice-card">' +
-      '<p class="practice-topic eyebrow">' + escapeHTML(card.topic) + "</p>" +
-      '<p class="practice-term">' + escapeHTML(card.term) + "</p>" +
-      (revealed
-        ? '<p class="practice-translation">' + escapeHTML(card.translation) + "</p>" +
-          '<p class="practice-example">' + escapeHTML(card.example) + "</p>" +
-          '<p class="practice-example-tr">' + escapeHTML(card.exampleTranslation) + "</p>" +
-          (card.notes ? '<p class="practice-notes">' + escapeHTML(card.notes) + "</p>" : "") +
-          '<div class="practice-actions">' +
-            '<button type="button" class="negative-btn" data-action="mark-learning">Still Learning</button>' +
-            '<button type="button" class="positive-btn" data-action="mark-known">Got It</button>' +
-          "</div>"
-        : '<div class="practice-actions"><button type="button" class="primary" data-action="reveal">Show Answer</button></div>'
-      ) +
-      '<p class="practice-meta">' + (practiceIndex + 1) + " of " + practiceQueue.length + " · " + body + "</p>" +
+      promptHTML + answerHTML + showAnswerBtn + gradeButtons +
+      '<p class="practice-meta">' + (practiceIndex + 1) + " of " + practiceQueue.length + " · " + badge + "</p>" +
       "</div></div>"
     );
   }
@@ -404,8 +536,87 @@
     );
   }
 
+  function renderMedia() {
+    var media = currentLang().media;
+    var types = ["Film", "Show", "Podcast"];
+    var list = mediaTypeFilter ? media.filter(function (m) { return m.type === mediaTypeFilter; }) : media;
+
+    var filters = '<div class="filters"><button type="button" class="chip ' + (!mediaTypeFilter ? "active" : "") + '" data-action="filter-media-type" data-type="">All</button>' +
+      types.map(function (t) { return '<button type="button" class="chip ' + (mediaTypeFilter === t ? "active" : "") + '" data-action="filter-media-type" data-type="' + t + '">' + t + "s</button>"; }).join("") + "</div>";
+
+    var rows = list.length ? list.map(function (m) {
+      return (
+        '<div class="media-row">' +
+        '<div><div class="media-title">' + escapeHTML(m.title) + '</div><div class="media-badges"><span class="media-badge">' + escapeHTML(m.type) + '</span><span class="media-badge">' + escapeHTML(m.level) + '</span></div><div class="media-note">' + escapeHTML(m.note) + "</div></div>" +
+        '<button type="button" class="media-del" data-action="del-media" data-id="' + m.id + '" aria-label="Delete">✕</button>' +
+        "</div>"
+      );
+    }).join("") : '<p class="empty">No recommendations here yet.</p>';
+
+    var note = state.currentLang === "lb"
+      ? "Luxembourgish media is limited given the size of the language — Luxembourgers are typically trilingual, so leaning on the German and French lists is a common, legitimate strategy too."
+      : "A starting list — availability varies by platform and region.";
+
+    return (
+      '<div class="panel"><h2>' + LANG_NAMES[state.currentLang] + " — Watch &amp; Listen</h2>" +
+      '<p class="field-hint" style="margin-bottom:16px;">' + note + "</p>" +
+      filters + rows +
+      '<form data-form="add-media">' +
+        '<div class="field-row">' +
+          '<div class="field"><label for="med-title">Title</label><input id="med-title" name="title" type="text" required /></div>' +
+          '<div class="field"><label for="med-type">Type</label><select id="med-type" name="type"><option>Film</option><option>Show</option><option>Podcast</option></select></div>' +
+        "</div>" +
+        '<div class="field-row">' +
+          '<div class="field"><label for="med-level">Level</label><input id="med-level" name="level" type="text" placeholder="e.g. B2" /></div>' +
+          '<div class="field"><label for="med-note">Note</label><input id="med-note" name="note" type="text" placeholder="Why it is worth your time" /></div>' +
+        "</div>" +
+        '<button type="submit" class="primary small">Add Recommendation</button>' +
+      "</form></div>"
+    );
+  }
+
+  function renderLog() {
+    var lang = currentLang();
+    var week = last7DaysMinutes(lang);
+    var max = Math.max.apply(null, week.map(function (d) { return d.minutes; }).concat([1]));
+    var bars = week.map(function (d) {
+      var h = Math.max(2, round((d.minutes / max) * 100));
+      return '<div class="chart-col"><div class="chart-bar" style="height:' + h + '%" title="' + d.minutes + ' min"></div><span class="chart-label">' + d.label + "</span></div>";
+    }).join("");
+    var totalWeek = week.reduce(function (s, d) { return s + d.minutes; }, 0);
+
+    var entries = lang.log.slice().sort(function (a, b) { return b.date.localeCompare(a.date) || b.id.localeCompare(a.id); }).slice(0, 40);
+    var rows = entries.length ? entries.map(function (l) {
+      return (
+        '<div class="log-row">' +
+        '<span class="log-date">' + dayLabel(l.date) + "</span>" +
+        '<div><div class="log-activity">' + escapeHTML(l.activity) + "</div>" + (l.note ? '<div class="log-note-text">' + escapeHTML(l.note) + "</div>" : "") + "</div>" +
+        '<span class="log-minutes num">' + l.minutes + " min</span>" +
+        '<button type="button" class="vocab-del" data-action="del-log" data-id="' + l.id + '" aria-label="Delete">✕</button>' +
+        "</div>"
+      );
+    }).join("") : '<p class="empty">No sessions logged yet.</p>';
+
+    var opts = ACTIVITIES.map(function (a) { return "<option>" + a + "</option>"; }).join("");
+
+    return (
+      '<div class="panel"><h2>' + LANG_NAMES[state.currentLang] + " — Practice Log</h2>" +
+      '<p class="field-hint">' + totalWeek + " minute" + (totalWeek === 1 ? "" : "s") + " this week</p>" +
+      '<div class="chart">' + bars + "</div>" +
+      '<div style="margin-top:26px;">' + rows + "</div>" +
+      '<form data-form="add-log">' +
+        '<div class="field-row">' +
+          '<div class="field"><label for="l-activity">Activity</label><select id="l-activity" name="activity">' + opts + "</select></div>" +
+          '<div class="field"><label for="l-minutes">Minutes</label><input id="l-minutes" name="minutes" type="number" min="0" step="1" required /></div>' +
+        "</div>" +
+        '<div class="field"><label for="l-note">Note (optional)</label><input id="l-note" name="note" type="text" placeholder="e.g. Watched episode 3 of Lupin" /></div>' +
+        '<button type="submit" class="primary small">Log Session</button>' +
+      "</form></div>"
+    );
+  }
+
   function renderApp() {
-    var body = mode === "practice" ? renderPractice() : mode === "browse" ? renderBrowse() : renderGrammar();
+    var body = mode === "practice" ? renderPractice() : mode === "browse" ? renderBrowse() : mode === "grammar" ? renderGrammar() : mode === "media" ? renderMedia() : renderLog();
     return (
       '<header class="top">' +
       '<div class="title-wrap"><span class="eyebrow">Personal &amp; Private</span><h1>Language Diary</h1><p class="sub">Advanced vocabulary and grammar, kept close.</p></div>' +
@@ -436,7 +647,7 @@
     var app = document.getElementById("app");
 
     Array.prototype.forEach.call(app.querySelectorAll('[data-action="set-lang"]'), function (btn) {
-      btn.addEventListener("click", function () { state.currentLang = btn.getAttribute("data-lang"); browseTopic = null; buildQueue(); render(); });
+      btn.addEventListener("click", function () { state.currentLang = btn.getAttribute("data-lang"); browseTopic = null; mediaTypeFilter = null; buildQueue(); render(); });
     });
     Array.prototype.forEach.call(app.querySelectorAll('[data-action="set-mode"]'), function (btn) {
       btn.addEventListener("click", function () { mode = btn.getAttribute("data-mode"); if (mode === "practice") buildQueue(); render(); });
@@ -445,17 +656,22 @@
     var revealBtn = app.querySelector('[data-action="reveal"]');
     if (revealBtn) revealBtn.addEventListener("click", function () { revealed = true; render(); });
 
+    var choiceBtns = app.querySelectorAll('[data-action="choose-option"]');
+    Array.prototype.forEach.call(choiceBtns, function (btn) {
+      btn.addEventListener("click", function () { choicePicked = btn.getAttribute("data-value"); revealed = true; render(); });
+    });
+
     var learningBtn = app.querySelector('[data-action="mark-learning"]');
     if (learningBtn) learningBtn.addEventListener("click", function () {
       var card = currentCard();
       mutate(function () { card.status = "learning"; card.streak = 0; markPracticeDay(); });
-      practiceIndex++; revealed = false; render();
+      practiceIndex++; revealed = false; setCurrentType(); render();
     });
     var knownBtn = app.querySelector('[data-action="mark-known"]');
     if (knownBtn) knownBtn.addEventListener("click", function () {
       var card = currentCard();
       mutate(function () { card.streak = (card.streak || 0) + 1; card.status = card.streak >= 2 ? "known" : "learning"; markPracticeDay(); });
-      practiceIndex++; revealed = false; render();
+      practiceIndex++; revealed = false; setCurrentType(); render();
     });
 
     var practiceKnownBtn = app.querySelector('[data-action="practice-known"]');
@@ -465,6 +681,9 @@
 
     Array.prototype.forEach.call(app.querySelectorAll('[data-action="filter-topic"]'), function (btn) {
       btn.addEventListener("click", function () { browseTopic = btn.getAttribute("data-topic") || null; render(); });
+    });
+    Array.prototype.forEach.call(app.querySelectorAll('[data-action="filter-media-type"]'), function (btn) {
+      btn.addEventListener("click", function () { mediaTypeFilter = btn.getAttribute("data-type") || null; render(); });
     });
 
     Array.prototype.forEach.call(app.querySelectorAll('[data-action="del-vocab"]'), function (btn) {
@@ -477,6 +696,18 @@
       btn.addEventListener("click", function () {
         var id = btn.getAttribute("data-id");
         mutate(function () { currentLang().grammar = currentLang().grammar.filter(function (g) { return g.id !== id; }); });
+      });
+    });
+    Array.prototype.forEach.call(app.querySelectorAll('[data-action="del-media"]'), function (btn) {
+      btn.addEventListener("click", function () {
+        var id = btn.getAttribute("data-id");
+        mutate(function () { currentLang().media = currentLang().media.filter(function (m) { return m.id !== id; }); });
+      });
+    });
+    Array.prototype.forEach.call(app.querySelectorAll('[data-action="del-log"]'), function (btn) {
+      btn.addEventListener("click", function () {
+        var id = btn.getAttribute("data-id");
+        mutate(function () { currentLang().log = currentLang().log.filter(function (l) { return l.id !== id; }); });
       });
     });
 
@@ -507,6 +738,29 @@
       if (!title || !body) return;
       mutate(function () {
         currentLang().grammar.push({ id: uid("g"), title: title, body: body, topic: (fd.get("topic") || "General").toString().trim() || "General" });
+      });
+    });
+
+    var mediaForm = app.querySelector('[data-form="add-media"]');
+    if (mediaForm) mediaForm.addEventListener("submit", function (e) {
+      e.preventDefault();
+      var fd = new FormData(mediaForm);
+      var title = (fd.get("title") || "").toString().trim();
+      if (!title) return;
+      mutate(function () {
+        currentLang().media.push({ id: uid("m"), title: title, type: fd.get("type") || "Film", level: (fd.get("level") || "").toString().trim() || "—", note: (fd.get("note") || "").toString().trim() });
+      });
+    });
+
+    var logForm = app.querySelector('[data-form="add-log"]');
+    if (logForm) logForm.addEventListener("submit", function (e) {
+      e.preventDefault();
+      var fd = new FormData(logForm);
+      var minutes = parseFloat(fd.get("minutes"));
+      if (isNaN(minutes) || minutes <= 0) return;
+      mutate(function () {
+        currentLang().log.push({ id: uid("l"), date: todayISO(), activity: fd.get("activity") || "Other", minutes: round(minutes), note: (fd.get("note") || "").toString().trim() });
+        markPracticeDay();
       });
     });
 
