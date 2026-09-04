@@ -1,0 +1,193 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<title>Language Diary</title>
+<meta name="description" content="A private, end-to-end encrypted advanced-level vocabulary and grammar diary for German, French, and Luxembourgish." />
+<link rel="manifest" href="manifest.json">
+<link rel="apple-touch-icon" href="apple-touch-icon.png">
+<link rel="icon" href="icon-192.png">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<meta name="apple-mobile-web-app-title" content="Language Diary">
+<meta name="theme-color" content="#1C1917">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,400;0,500;0,600;1,400;1,500&family=Manrope:wght@400;500;600;700;800&family=IBM+Plex+Mono:wght@400;500;600&display=swap">
+
+<style>
+  :root {
+    --ink: #1C1917;
+    --paper: #F7F3EC;
+    --surface: #FFFDF9;
+    --surface-2: #EFE8DA;
+    --line: #DED2B8;
+    --muted: #8A7F6B;
+    --accent: #3E4C6D;
+    --accent-ink: #FFFDF9;
+    --accent-2: #B08D57;
+    --positive: #4A7A5D;
+    --positive-soft: #E4ECE5;
+    --negative: #8B4536;
+    --negative-soft: #F1E1DA;
+    --shadow: 0 1px 2px rgba(28,25,23,0.05), 0 16px 32px -20px rgba(28,25,23,0.30);
+  }
+
+  @media (prefers-color-scheme: dark) {
+    :root:not([data-theme="light"]) {
+      --ink: #F3EEE3;
+      --paper: #14120F;
+      --surface: #1C1915;
+      --surface-2: #24211B;
+      --line: #3A342A;
+      --muted: #A79B85;
+      --accent: #8B9BC4;
+      --accent-ink: #14120F;
+      --accent-2: #C9A05C;
+      --positive: #7FB08F;
+      --positive-soft: #1E2E24;
+      --negative: #C87A5F;
+      --negative-soft: #33221C;
+      --shadow: 0 1px 2px rgba(0,0,0,0.35), 0 16px 32px -20px rgba(0,0,0,0.6);
+    }
+  }
+
+  :root[data-theme="dark"] {
+    --ink: #F3EEE3;
+    --paper: #14120F;
+    --surface: #1C1915;
+    --surface-2: #24211B;
+    --line: #3A342A;
+    --muted: #A79B85;
+    --accent: #8B9BC4;
+    --accent-ink: #14120F;
+    --accent-2: #C9A05C;
+    --positive: #7FB08F;
+    --positive-soft: #1E2E24;
+    --negative: #C87A5F;
+    --negative-soft: #33221C;
+    --shadow: 0 1px 2px rgba(0,0,0,0.35), 0 16px 32px -20px rgba(0,0,0,0.6);
+  }
+
+  * { box-sizing: border-box; }
+  html, body { margin: 0; padding: 0; }
+  body { background: var(--paper); color: var(--ink); font-family: "Manrope", ui-sans-serif, system-ui, sans-serif; font-weight: 400; -webkit-font-smoothing: antialiased; min-height: 100vh; }
+
+  .num { font-family: "IBM Plex Mono", ui-monospace, monospace; font-variant-numeric: tabular-nums; font-weight: 500; }
+  .eyebrow { font-size: 0.7rem; text-transform: uppercase; letter-spacing: 0.14em; color: var(--muted); font-weight: 600; }
+  #app { max-width: 900px; margin: 0 auto; padding: 40px 24px 96px; }
+
+  header.top { display: flex; align-items: flex-start; justify-content: space-between; gap: 16px; padding: 0 0 26px; flex-wrap: wrap; border-bottom: 1px solid var(--line); margin-bottom: 26px; }
+  .title-wrap .eyebrow { margin-bottom: 8px; }
+  .title-wrap h1 { font-family: "Cormorant Garamond", ui-serif, Georgia, serif; font-weight: 500; font-size: 2.6rem; letter-spacing: 0.01em; margin: 0; color: var(--ink); text-wrap: balance; }
+  .title-wrap p.sub { margin: 8px 0 0; color: var(--muted); font-size: 0.92rem; font-style: italic; font-family: "Cormorant Garamond", serif; }
+  .top-right { display: flex; align-items: center; gap: 14px; flex-wrap: wrap; padding-top: 6px; }
+  .conn { font-size: 0.68rem; color: var(--muted); letter-spacing: 0.1em; text-transform: uppercase; font-weight: 600; }
+  .lock-btn { background: transparent; border: 1px solid var(--line); color: var(--ink); border-radius: 2px; padding: 8px 16px; font-family: "Manrope", sans-serif; font-weight: 600; font-size: 0.7rem; text-transform: uppercase; letter-spacing: 0.1em; cursor: pointer; }
+  .lock-btn:hover { border-color: var(--accent); color: var(--accent); }
+
+  .lang-tabs { display: flex; gap: 10px; margin-bottom: 20px; flex-wrap: wrap; }
+  .lang-tab { background: transparent; border: 1px solid var(--line); color: var(--muted); border-radius: 2px; padding: 10px 20px; font-family: "Cormorant Garamond", serif; font-size: 1.05rem; cursor: pointer; }
+  .lang-tab.active { border-color: var(--accent); color: var(--ink); background: var(--surface-2); }
+
+  .stats { display: grid; grid-template-columns: repeat(4, 1fr); gap: 1px; background: var(--line); border: 1px solid var(--line); margin-bottom: 24px; }
+  .stat-card { background: var(--surface); padding: 18px 18px; }
+  .stat-label { font-size: 0.64rem; text-transform: uppercase; letter-spacing: 0.1em; color: var(--muted); font-weight: 600; margin: 0 0 8px; }
+  .stat-value { font-family: "Cormorant Garamond", serif; font-size: 1.7rem; font-weight: 500; margin: 0; color: var(--ink); }
+
+  .mode-tabs { display: flex; gap: 2px; background: var(--line); border: 1px solid var(--line); margin-bottom: 24px; }
+  .mode-tab { flex: 1; background: var(--surface); border: none; color: var(--muted); padding: 13px; font-family: "Manrope", sans-serif; font-weight: 600; font-size: 0.72rem; text-transform: uppercase; letter-spacing: 0.1em; cursor: pointer; }
+  .mode-tab.active { background: var(--ink); color: var(--paper); }
+
+  .panel { background: var(--surface); border: 1px solid var(--line); border-radius: 4px; box-shadow: var(--shadow); padding: 30px 32px; }
+  .panel h2 { font-family: "Cormorant Garamond", ui-serif, serif; font-size: 1.5rem; font-weight: 500; margin: 0 0 18px; color: var(--ink); }
+
+  .practice-card { text-align: center; padding: 20px 0 8px; }
+  .practice-topic { margin-bottom: 18px; }
+  .practice-term { font-family: "Cormorant Garamond", serif; font-size: 2.4rem; font-weight: 500; color: var(--ink); margin: 0 0 8px; text-wrap: balance; }
+  .practice-translation { font-family: "Cormorant Garamond", serif; font-style: italic; font-size: 1.3rem; color: var(--accent); margin: 14px 0 6px; }
+  .practice-example { font-size: 0.92rem; color: var(--ink); margin: 18px auto 4px; max-width: 480px; line-height: 1.6; }
+  .practice-example-tr { font-size: 0.84rem; color: var(--muted); margin: 0 auto 6px; max-width: 480px; font-style: italic; }
+  .practice-notes { font-size: 0.8rem; color: var(--muted); margin-top: 10px; max-width: 480px; margin-left: auto; margin-right: auto; }
+  .practice-actions { display: flex; gap: 12px; justify-content: center; margin-top: 26px; flex-wrap: wrap; }
+  .practice-meta { font-size: 0.7rem; color: var(--muted); text-transform: uppercase; letter-spacing: 0.08em; margin-top: 24px; }
+  .status-badge { display: inline-block; font-size: 0.6rem; text-transform: uppercase; letter-spacing: 0.08em; font-weight: 700; padding: 3px 9px; border-radius: 2px; }
+  .status-badge.new { background: var(--surface-2); color: var(--muted); }
+  .status-badge.learning { background: var(--negative-soft); color: var(--negative); }
+  .status-badge.known { background: var(--positive-soft); color: var(--positive); }
+
+  button.primary { background: var(--ink); color: var(--paper); border: 1px solid var(--ink); border-radius: 2px; padding: 13px 22px; font-family: "Manrope", sans-serif; font-weight: 600; font-size: 0.72rem; text-transform: uppercase; letter-spacing: 0.12em; cursor: pointer; }
+  button.primary:hover { background: transparent; color: var(--ink); }
+  button.primary.small { padding: 9px 16px; }
+  button.primary:disabled { opacity: 0.5; cursor: default; }
+  button.primary:focus-visible, button:focus-visible, select:focus-visible, input:focus-visible { outline: 1px solid var(--accent); outline-offset: 2px; }
+  button.ghost { background: transparent; border: 1px solid var(--accent); color: var(--ink); border-radius: 2px; padding: 9px 16px; font-family: "Manrope", sans-serif; font-weight: 600; font-size: 0.7rem; text-transform: uppercase; letter-spacing: 0.1em; cursor: pointer; }
+  button.ghost:hover { background: var(--accent); color: var(--accent-ink); }
+  button.negative-btn { background: transparent; border: 1px solid var(--negative); color: var(--negative); border-radius: 2px; padding: 13px 22px; font-family: "Manrope", sans-serif; font-weight: 600; font-size: 0.72rem; text-transform: uppercase; letter-spacing: 0.1em; cursor: pointer; }
+  button.negative-btn:hover { background: var(--negative); color: var(--surface); }
+  button.positive-btn { background: transparent; border: 1px solid var(--positive); color: var(--positive); border-radius: 2px; padding: 13px 22px; font-family: "Manrope", sans-serif; font-weight: 600; font-size: 0.72rem; text-transform: uppercase; letter-spacing: 0.1em; cursor: pointer; }
+  button.positive-btn:hover { background: var(--positive); color: var(--surface); }
+
+  .filters { display: flex; gap: 6px; flex-wrap: wrap; margin-bottom: 18px; }
+  .chip { font-size: 0.7rem; text-transform: uppercase; letter-spacing: 0.06em; padding: 6px 14px; border-radius: 2px; border: 1px solid var(--line); background: var(--surface); color: var(--muted); cursor: pointer; font-family: "Manrope", sans-serif; font-weight: 600; }
+  .chip.active { background: var(--ink); color: var(--paper); border-color: var(--ink); }
+
+  .vocab-row { display: grid; grid-template-columns: 1fr auto auto; align-items: baseline; gap: 12px; padding: 14px 0; border-bottom: 1px solid var(--line); }
+  .vocab-row:last-child { border-bottom: none; }
+  .vocab-term { font-family: "Cormorant Garamond", serif; font-size: 1.15rem; font-weight: 600; }
+  .vocab-translation { font-size: 0.82rem; color: var(--muted); margin-top: 2px; }
+  .vocab-topic { font-size: 0.64rem; text-transform: uppercase; letter-spacing: 0.06em; color: var(--muted); }
+  .vocab-del { background: none; border: none; color: var(--muted); cursor: pointer; font-size: 0.9rem; width: 22px; }
+  .vocab-del:hover { color: var(--negative); }
+
+  .grammar-card { padding: 18px 0; border-bottom: 1px solid var(--line); }
+  .grammar-card:last-child { border-bottom: none; }
+  .grammar-title { font-family: "Cormorant Garamond", serif; font-size: 1.25rem; font-weight: 600; margin: 0 0 8px; }
+  .grammar-body { font-size: 0.88rem; line-height: 1.65; color: var(--ink); }
+  .grammar-topic { font-size: 0.64rem; text-transform: uppercase; letter-spacing: 0.06em; color: var(--muted); margin-bottom: 6px; display: block; }
+  .grammar-del { float: right; background: none; border: none; color: var(--muted); cursor: pointer; }
+  .grammar-del:hover { color: var(--negative); }
+
+  form { display: flex; flex-direction: column; gap: 14px; margin-top: 24px; padding-top: 22px; border-top: 1px solid var(--line); }
+  .field-row { display: grid; grid-template-columns: 1fr 1fr; gap: 14px; }
+  .field { display: flex; flex-direction: column; gap: 6px; }
+  .field label { font-size: 0.66rem; text-transform: uppercase; letter-spacing: 0.1em; color: var(--muted); font-weight: 600; }
+  .field input, .field select, .field textarea { font-family: "Manrope", sans-serif; font-weight: 500; font-size: 0.9rem; padding: 10px 12px; border-radius: 2px; border: 1px solid var(--line); background: var(--surface); color: var(--ink); }
+  .field textarea { resize: vertical; min-height: 70px; font-family: "Manrope", sans-serif; }
+  .field input:focus-visible, .field select:focus-visible, .field textarea:focus-visible { outline: 1px solid var(--accent); outline-offset: 1px; border-color: var(--accent); }
+  .empty { color: var(--muted); font-size: 0.85rem; padding: 20px 0; text-align: center; font-style: italic; font-family: "Cormorant Garamond", serif; }
+
+  footer.note { text-align: center; color: var(--muted); font-size: 0.72rem; letter-spacing: 0.06em; margin-top: 36px; font-weight: 500; text-transform: uppercase; }
+
+  .lock-wrap { min-height: 76vh; display: flex; align-items: center; justify-content: center; padding: 30px 10px; }
+  .lock-card { width: 100%; max-width: 420px; background: var(--surface); border: 1px solid var(--line); border-radius: 4px; box-shadow: var(--shadow); padding: 44px 40px; }
+  .lock-card .eyebrow { display: block; margin-bottom: 14px; text-align: center; }
+  .lock-card h1 { font-family: "Cormorant Garamond", serif; font-size: 2.1rem; font-weight: 500; margin: 0 0 14px; color: var(--ink); text-align: center; }
+  .lock-card p.desc { color: var(--muted); font-size: 0.86rem; font-weight: 400; line-height: 1.65; margin: 0 0 26px; text-align: center; }
+  .lock-field { display: flex; flex-direction: column; gap: 6px; margin-bottom: 16px; }
+  .lock-field label { font-size: 0.68rem; text-transform: uppercase; letter-spacing: 0.1em; color: var(--muted); font-weight: 600; }
+  .lock-field input { font-family: "Manrope", sans-serif; font-weight: 500; font-size: 0.95rem; padding: 12px 14px; border-radius: 2px; border: 1px solid var(--line); background: var(--surface); color: var(--ink); }
+  .lock-field input:focus-visible { outline: 1px solid var(--accent); outline-offset: 1px; border-color: var(--accent); }
+  .lock-row { display: flex; align-items: center; gap: 8px; margin-bottom: 18px; font-size: 0.82rem; color: var(--muted); font-weight: 500; }
+  .lock-row input[type="checkbox"] { width: 15px; height: 15px; accent-color: var(--accent); }
+  .lock-error { background: var(--negative-soft); color: var(--negative); border-radius: 2px; padding: 10px 14px; font-size: 0.82rem; font-weight: 500; margin-bottom: 16px; }
+  .lock-note { color: var(--muted); font-size: 0.74rem; font-weight: 400; margin-top: 20px; line-height: 1.6; text-align: center; }
+  .lock-reset { background: none; border: none; color: var(--muted); text-decoration: underline; cursor: pointer; font-family: "Manrope", sans-serif; font-weight: 500; font-size: 0.76rem; padding: 0; margin-top: 16px; display: block; margin-left: auto; margin-right: auto; }
+  .lock-reset:hover { color: var(--negative); }
+  .lock-card button.primary { width: 100%; }
+
+  @media (max-width: 780px) {
+    .stats { grid-template-columns: repeat(2, 1fr); }
+    .field-row { grid-template-columns: 1fr; }
+    .title-wrap h1 { font-size: 2.1rem; }
+    #app { padding: 28px 18px 80px; }
+    .practice-term { font-size: 1.9rem; }
+  }
+</style>
+</head>
+<body>
+<div id="app"></div>
+<script src="app.js"></script>
+</body>
+</html>

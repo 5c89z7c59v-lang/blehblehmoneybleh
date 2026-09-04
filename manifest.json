@@ -1,0 +1,16 @@
+{
+  "name": "Language Diary",
+  "short_name": "Language Diary",
+  "description": "A private, encrypted advanced-level vocabulary and grammar diary for German, French, and Luxembourgish.",
+  "start_url": "./index.html",
+  "scope": "./",
+  "display": "standalone",
+  "background_color": "#14120F",
+  "theme_color": "#1C1917",
+  "orientation": "portrait-primary",
+  "icons": [
+    { "src": "icon-192.png", "sizes": "192x192", "type": "image/png", "purpose": "any" },
+    { "src": "icon-512.png", "sizes": "512x512", "type": "image/png", "purpose": "any" },
+    { "src": "icon-512.png", "sizes": "512x512", "type": "image/png", "purpose": "maskable" }
+  ]
+}
